@@ -26,8 +26,8 @@
  *  v1.0 amc-nu 2023-08
  */
 
-#ifndef TOPIC_TO_IMAGE_H
-#define TOPIC_TO_IMAGE_H
+#ifndef BAG_TO_DATASET_H
+#define BAG_TO_DATASET_H
 
 #include <memory>
 #include <algorithm>
@@ -49,10 +49,10 @@
 #include "sensor_msgs/msg/image.hpp"
 
 
-class BagToImage : public rclcpp::Node
+class BagToDataset : public rclcpp::Node
 {
 public:
-  explicit BagToImage(const rclcpp::NodeOptions & options);
+  explicit BagToDataset(const rclcpp::NodeOptions & options);
 
 private:
 
@@ -67,7 +67,8 @@ private:
   void CreateDirectories();
 
   cv_bridge::CvImagePtr
-  MessageToImage(std::shared_ptr<rosbag2_storage::SerializedBagMessage> bag_message, const std::string &topic_type);
+  MessageToImage(std::shared_ptr<rosbag2_storage::SerializedBagMessage> bag_message, const std::string &topic_type,
+                 const std::string &image_encoding);
 };
 
-#endif //TOPIC_TO_IMAGE_H
+#endif //BAG_TO_DATASET_H

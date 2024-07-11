@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>ros2_bag_to_image</name>
+  <name>ros2_bag_to_dataset</name>
   <version>1.0.0</version>
-  <description>ROS2 Bag To Image</description>
+  <description>ROS2 Bag To Dataset</description>
 
-  <maintainer email="abrahammonrroy@yahoo.com">amc</maintainer>
+  <maintainer email="f.dilauro2@campus.unimib.it">fdila</maintainer>
 
   <license>Apache 2</license>
 

@@ -26,10 +26,10 @@
  *  v1.0 amc-nu 2023-08
  */
 
-#include "bag_to_image/bag_to_image.hpp"
+#include "../include/bag_to_dataset/bag_to_dataset.hpp"
 
-BagToImage::BagToImage(const rclcpp::NodeOptions &options) :
-  Node("bag_to_image", options) {
+BagToDataset::BagToDataset(const rclcpp::NodeOptions &options) :
+  Node("bag_to_dataset", options) {
   // IO
   input_path_ = this->declare_parameter<std::string>("input/path");
   bag_format_ = this->declare_parameter<std::string>("input/bag_format", "cdr");
@@ -47,7 +47,7 @@ BagToImage::BagToImage(const rclcpp::NodeOptions &options) :
   rclcpp::shutdown();
 }
 
-void BagToImage::ReadBag() {
+void BagToDataset::ReadBag() {
   rosbag2_storage::StorageOptions storage_options;
   rosbag2_cpp::ConverterOptions converter_options;
   storage_options.uri = input_path_;
@@ -83,8 +83,15 @@ void BagToImage::ReadBag() {
         RCLCPP_WARN_STREAM(get_logger(), "No Image or CompressedImage topic types available in the rosbag");
         break;
       }
+      std::string curr_image_encoding;
 
-      auto image_msg = MessageToImage(bag_message, curr_topic_type);
+      if (bag_message->topic_name == "/rgb/image_raw"){
+          curr_image_encoding = "bgr8";
+      } else if (bag_message->topic_name == "/depth_to_rgb/image_raw"){
+          curr_image_encoding = "16UC1";
+      }
+
+      auto image_msg = MessageToImage(bag_message, curr_topic_type, curr_image_encoding);
 
       if (image_msg == nullptr) {
         RCLCPP_INFO_STREAM(get_logger(), "Could not convert the message to Image type: "
@@ -98,7 +105,7 @@ void BagToImage::ReadBag() {
         target_topic_name = target_topic_name.substr(1);
       }
       target_topic_name = std::regex_replace(target_topic_name, std::regex("/"), "_");
-      fname = output_path_ + "/" + target_topic_name + "_" +
+      fname = output_path_ + "/" + target_topic_name + "/" +
               boost::lexical_cast<std::string>(image_msg->header.stamp.sec) + "." +
               boost::lexical_cast<std::string>(image_msg->header.stamp.nanosec) + ".png";
 
@@ -110,8 +117,8 @@ void BagToImage::ReadBag() {
 
 }
 
-cv_bridge::CvImagePtr BagToImage::MessageToImage(std::shared_ptr<rosbag2_storage::SerializedBagMessage> bag_message,
-                                                 const std::string &topic_type) {
+cv_bridge::CvImagePtr BagToDataset::MessageToImage(std::shared_ptr<rosbag2_storage::SerializedBagMessage> bag_message,
+                                                 const std::string &topic_type, const std::string &image_encoding) {
   cv_bridge::CvImagePtr in_image_ptr;
 
   if (topic_type == "sensor_msgs/msg/Image") {
@@ -120,7 +127,7 @@ cv_bridge::CvImagePtr BagToImage::MessageToImage(std::shared_ptr<rosbag2_storage
     rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
     serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
     try {
-      in_image_ptr = cv_bridge::toCvCopy(extracted_msg, sensor_msgs::image_encodings::BGR8);
+      in_image_ptr = cv_bridge::toCvCopy(extracted_msg, image_encoding);
     } catch (cv_bridge::Exception &e) {
       RCLCPP_ERROR(this->get_logger(), "cv_bridge exception: %s", e.what());
     }
@@ -139,7 +146,7 @@ cv_bridge::CvImagePtr BagToImage::MessageToImage(std::shared_ptr<rosbag2_storage
   return in_image_ptr;
 }
 
-void BagToImage::CreateDirectories() {
+void BagToDataset::CreateDirectories() {
   for (const auto &target_topic: input_topics_) {
     RCLCPP_INFO_STREAM(get_logger(), target_topic);
 
@@ -156,7 +163,7 @@ void BagToImage::CreateDirectories() {
   }
 }
 
-void BagToImage::CheckParams() {
+void BagToDataset::CheckParams() {
   if (input_topics_.empty()) {
     RCLCPP_ERROR_STREAM(get_logger(), "At least one topic required, none provided. Terminating...");
     rclcpp::shutdown(nullptr, "Invalid Input Topic(s)");
@@ -183,6 +190,6 @@ void BagToImage::CheckParams() {
 
 #include <rclcpp_components/register_node_macro.hpp>
 
-RCLCPP_COMPONENTS_REGISTER_NODE(BagToImage)
+RCLCPP_COMPONENTS_REGISTER_NODE(BagToDataset)
 
 

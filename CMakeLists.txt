@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(ros2_bag_to_image)
+project(ros2_bag_to_dataset)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,40 +11,21 @@ ament_auto_find_build_dependencies()
 find_package (OpenCV REQUIRED)
 find_package (Boost REQUIRED)
 
-# topic_to_image
-ament_auto_add_library(topic_to_image SHARED
-        src/topic_to_image.cpp
+ament_auto_add_library(bag_to_dataset SHARED
+        src/bag_to_dataset.cpp
         )
 
-target_link_libraries(topic_to_image ${PCL_LIBRARIES}
+target_link_libraries(bag_to_dataset ${PCL_LIBRARIES}
         )
 
-target_include_directories(topic_to_image
+target_include_directories(bag_to_dataset
         SYSTEM PUBLIC
         ${OpenCV_INCLUDE_DIRS}
         )
 
-rclcpp_components_register_node(topic_to_image
-        PLUGIN "TopicToImage"
-        EXECUTABLE topic_to_image_node
-        )
-
-# topic_to_image
-ament_auto_add_library(bag_to_image SHARED
-        src/bag_to_image.cpp
-        )
-
-target_link_libraries(bag_to_image ${PCL_LIBRARIES}
-        )
-
-target_include_directories(bag_to_image
-        SYSTEM PUBLIC
-        ${OpenCV_INCLUDE_DIRS}
-        )
-
-rclcpp_components_register_node(bag_to_image
-        PLUGIN "BagToImage"
-        EXECUTABLE bag_to_image_node
+rclcpp_components_register_node(bag_to_dataset
+        PLUGIN "BagToDataset"
+        EXECUTABLE bag_to_dataset_node
         )
 ######
 

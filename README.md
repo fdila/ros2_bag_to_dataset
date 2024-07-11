@@ -32,7 +32,7 @@ The images are exported in lossless PNG format.
 
 How to launch:
 ```bash
-$ ros2 launch ros2_bag_to_image bag_to_image.xml \
+$ ros2 launch ros2_bag_to_image bag_to_dataset.xml \
         input/path:=/PATH_TO/input_bag/ \
         input/topics:="['camera1/image_rawcompressed', 'camera2/image_raw']"
 ```
