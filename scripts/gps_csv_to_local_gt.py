@@ -19,11 +19,23 @@ df = pd.read_csv(input_file)
 
 origin = (df['lat'][0], df['lon'][0])
 
-df['x'], df['y'] = zip(*df.apply(lambda row: latlon_to_local_coordinates(row['lat'], row['lon'], origin), axis=1))
-df[['sec', 'nsec', 'x', 'y']].to_csv(output_file, index=False)
+df['tx'], df['ty'] = zip(*df.apply(lambda row: latlon_to_local_coordinates(row['lat'], row['lon'], origin), axis=1))
+
+df['timestamp'] = df['sec'].astype(str) + '.' + df['nsec'].astype(str).str[:4]
+df['tz'] = 0.0
+df['qx'] = 0.0
+df['qy'] = 0.0
+df['qz'] = 0.0
+df['qw'] = 1.0
+
+output_columns = ['timestamp', 'tx', 'ty', 'tz', 'qx', 'qy', 'qz', 'qw']
+with open(output_file, 'w') as f:
+    f.write("# timestamp tx ty tz qx qy qz qw\n")
+df[output_columns].to_csv(output_file, mode='a', sep=' ', index=False, header=False)
+
 
 plt.figure(figsize=(10, 6))
-plt.plot(df['x'].values, df['y'].values, marker='o', linestyle='-', color='b', linewidth=0.4, markersize=0.8)
+plt.plot(df['tx'].values, df['ty'].values, marker='o', linestyle='-', color='b', linewidth=0.4, markersize=0.8)
 plt.xlabel('X (meters)')
 plt.ylabel('Y (meters)')
 plt.title('Trajectory')
