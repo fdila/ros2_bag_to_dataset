@@ -168,7 +168,7 @@ void BagToDataset::GetGtBag() {
 
     std::ofstream gps_file;
     gps_file.open (output_path_ + "/gps.csv");
-    gps_file << "sec, nsec, lat, lon,\n";
+    gps_file << "sec,nsec,lat,lon\n";
 
 
     while (reader.has_next()) {
