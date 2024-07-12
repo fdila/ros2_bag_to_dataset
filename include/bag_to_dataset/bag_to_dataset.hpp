@@ -28,6 +28,8 @@
 
 #ifndef BAG_TO_DATASET_H
 #define BAG_TO_DATASET_H
+#include <fstream>
+#include <sstream>
 
 #include <memory>
 #include <algorithm>
@@ -47,6 +49,7 @@
 #include "rosbag2_storage/storage_options.hpp"
 #include "sensor_msgs/msg/compressed_image.h"
 #include "sensor_msgs/msg/image.hpp"
+#include "sensor_msgs/msg/nav_sat_fix.hpp"
 
 
 class BagToDataset : public rclcpp::Node
@@ -63,6 +66,7 @@ private:
   void CheckParams();
 
   void ReadBag();
+  void GetGtBag();
 
   void CreateDirectories();
 

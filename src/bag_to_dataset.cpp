@@ -42,6 +42,7 @@ BagToDataset::BagToDataset(const rclcpp::NodeOptions &options) :
 
   CheckParams();
   ReadBag();
+  GetGtBag();
 
   RCLCPP_INFO_STREAM(get_logger(), "Complete");
   rclcpp::shutdown();
@@ -146,6 +147,56 @@ cv_bridge::CvImagePtr BagToDataset::MessageToImage(std::shared_ptr<rosbag2_stora
   return in_image_ptr;
 }
 
+void BagToDataset::GetGtBag() {
+    rosbag2_storage::StorageOptions storage_options;
+    rosbag2_cpp::ConverterOptions converter_options;
+    storage_options.uri = input_path_;
+    storage_options.storage_id = storage_id_;
+    converter_options.output_serialization_format = bag_format_;
+
+    rosbag2_cpp::Reader reader(std::make_unique<rosbag2_cpp::readers::SequentialReader>());
+    reader.open(storage_options, converter_options);
+
+    rosbag2_storage::StorageFilter storage_filter;
+
+    std::vector<std::string> gps_topic;
+    gps_topic.push_back("/piksi_rover/navsatfix");
+    storage_filter.topics = gps_topic;
+    reader.set_filter(storage_filter);
+
+    auto topics_types = reader.get_all_topics_and_types();
+
+    std::ofstream gps_file;
+    gps_file.open (output_path_ + "/gps.csv");
+    gps_file << "sec, nsec, lat, lon,\n";
+
+
+    while (reader.has_next()) {
+        auto bag_message = reader.read_next();
+
+        if (std::find(gps_topic.begin(), gps_topic.end(), bag_message->topic_name) != gps_topic.end()) {
+            sensor_msgs::msg::NavSatFix extracted_msg;
+            rclcpp::Serialization<sensor_msgs::msg::NavSatFix> serialization;
+            rclcpp::SerializedMessage extracted_serialized_msg(*bag_message->serialized_data);
+            serialization.deserialize_message(&extracted_serialized_msg, &extracted_msg);
+
+            auto sec = extracted_msg.header.stamp.sec;
+            auto nsec = extracted_msg.header.stamp.nanosec;
+            auto lat = extracted_msg.latitude;
+            auto lon = extracted_msg.longitude;
+
+            std::stringstream ss;
+            ss << std::fixed << std::setprecision(10);
+            ss << sec << "," << nsec << "," << lat << "," << lon;
+            std::string line = ss.str();
+
+            gps_file << line << std::endl;
+
+        }//end check if topic matches
+    }//end of rosbag reading
+    gps_file.close();
+    RCLCPP_INFO_STREAM(get_logger(), "GPS saved to: " << output_path_ + "/gps.csv");
+}
 void BagToDataset::CreateDirectories() {
   for (const auto &target_topic: input_topics_) {
     RCLCPP_INFO_STREAM(get_logger(), target_topic);
